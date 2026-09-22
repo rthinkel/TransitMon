@@ -1,0 +1,138 @@
+.TH TRANSITPROBE 1 "September 2026" "TransitMon 0.1.0" "User Commands"
+.SH NAME
+transitprobe \- discover and inspect OBD-II data exposed by a vehicle
+.SH SYNOPSIS
+.B transitprobe scan
+.RI [ --port " DEVICE" ]
+.RI [ --output " FILE" ]
+.RI [ --mock ]
+.PP
+.B transitprobe live
+.RI [ --port " DEVICE" ]
+.RI [ --interval " SECONDS" ]
+.RI [ --count " N" ]
+.RI [ --mock ]
+.SH DESCRIPTION
+.B transitprobe
+is the discovery and inspection utility for TransitMon.
+It is intended to be run before designing or refining a vehicle-specific dashboard so that the available OBD-II data is measured rather than assumed.
+.PP
+Version 0.1 uses the standard OBD-II command set exposed by the python-OBD backend.
+It does not yet perform Ford-specific enhanced-module discovery, HS-CAN/MS-CAN inventory, or raw CAN capture.
+.SH COMMANDS
+.SS scan
+Connect to the OBD adapter, enumerate the commands reported as supported by the active connection, attempt to read the VIN when VIN access is reported as supported, and write a JSON vehicle profile.
+.PP
+The scan output includes the effective adapter port, detected protocol name, VIN when available, supported-command count, and a command listing.
+.TP
+.BI --port " DEVICE"
+Use the specified serial device, for example
+.IR /dev/ttyUSB0 .
+If omitted, the backend attempts serial-port auto-detection.
+.TP
+.BI --output " FILE"
+Write the vehicle profile to
+.IR FILE .
+The default is
+.IR ~/.local/share/transitmon/vehicle-profile.json .
+.TP
+.B --mock
+Use the built-in mock vehicle instead of physical OBD hardware.
+.SS live
+Display live values for common dashboard commands that the connected vehicle reports as supported.
+The display is refreshed repeatedly until interrupted or until the requested update count is reached.
+.TP
+.BI --port " DEVICE"
+Use the specified serial device, for example
+.IR /dev/ttyUSB0 .
+If omitted, the backend attempts serial-port auto-detection.
+.TP
+.BI --interval " SECONDS"
+Set the delay between display updates.
+The default is 1.0 second.
+Values lower than 0.1 seconds are clamped to 0.1 seconds.
+.TP
+.BI --count " N"
+Stop after
+.I N
+updates.
+The default is 0, which means continue until Ctrl-C.
+.TP
+.B --mock
+Use the built-in mock vehicle instead of physical OBD hardware.
+.SH VEHICLE PROFILE
+The default profile path is:
+.PP
+.nf
+~/.local/share/transitmon/vehicle-profile.json
+.fi
+.PP
+The JSON profile contains a schema version, creation timestamp, adapter port, protocol, VIN when available, and the supported-command inventory discovered during the scan.
+.PP
+The profile is intended to provide a reproducible record of what the vehicle actually exposed at scan time.
+.SH EXAMPLES
+Scan a USB adapter on
+.IR /dev/ttyUSB0 :
+.PP
+.nf
+transitprobe scan --port /dev/ttyUSB0
+.fi
+.PP
+Write the profile to a custom path:
+.PP
+.nf
+transitprobe scan --port /dev/ttyUSB0 --output ./transit-profile.json
+.fi
+.PP
+Watch live supported values once per second:
+.PP
+.nf
+transitprobe live --port /dev/ttyUSB0
+.fi
+.PP
+Take ten updates at half-second intervals:
+.PP
+.nf
+transitprobe live --port /dev/ttyUSB0 --interval 0.5 --count 10
+.fi
+.PP
+Exercise discovery without hardware:
+.PP
+.nf
+transitprobe scan --mock
+transitprobe live --mock --count 5
+.fi
+.SH SERIAL PERMISSIONS
+On Debian systems, USB serial access commonly requires membership in the
+.B dialout
+group.
+For example:
+.PP
+.nf
+sudo usermod -aG dialout "$USER"
+.fi
+.PP
+Log out and back in after changing group membership.
+.SH EXIT STATUS
+.TP
+.B 0
+Successful scan, normal live-mode completion, or live mode interrupted with Ctrl-C.
+.TP
+.B 1
+The OBD adapter could not be opened or connected, or another operating-system-level connection error occurred.
+.TP
+.B 2
+No common live dashboard commands were reported as supported, or invalid command-line usage was supplied to the argument parser.
+.SH NOTES
+A command being defined by OBD-II does not mean that a particular vehicle implements it.
+The purpose of
+.B transitprobe
+is to record the commands actually reported by the connected vehicle.
+.PP
+Use the resulting inventory to decide which values should appear in
+.BR transitmon (1)
+rather than assuming that a sensor or PID exists.
+.SH SEE ALSO
+.BR transitmon (1)
+.SH AUTHORS
+Rory Hinkel and contributors.

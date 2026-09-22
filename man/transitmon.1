@@ -1,0 +1,112 @@
+.TH TRANSITMON 1 "September 2026" "TransitMon 0.1.0" "User Commands"
+.SH NAME
+transitmon \- live terminal monitor for supported OBD-II data
+.SH SYNOPSIS
+.B transitmon
+.RI [ --port " DEVICE" ]
+.RI [ --mock ]
+.SH DESCRIPTION
+.B transitmon
+opens an OBD-II connection and displays live vehicle data in a curses-based terminal interface.
+The program is intended for a Linux host such as a headless Debian Raspberry Pi accessed over SSH.
+.PP
+TransitMon does not assume that every OBD-II sensor exists on the connected vehicle.
+At startup it inspects the commands reported as supported by the active ECU connection and only polls dashboard items present in that supported-command set.
+Unsupported or null responses are displayed as unavailable rather than being fabricated.
+.PP
+Version 0.1 is limited to standard OBD-II data available through the python-OBD backend.
+Ford-specific enhanced modules and PIDs are outside the scope of this version.
+.SH OPTIONS
+.TP
+.BI --port " DEVICE"
+Use the specified serial device for the OBD adapter, for example
+.IR /dev/ttyUSB0 .
+If omitted, the backend attempts serial-port auto-detection.
+.TP
+.B --mock
+Use the built-in mock vehicle instead of physical OBD hardware.
+This is useful for testing the TUI before an adapter is installed.
+.TP
+.BR -h , " --help"
+Show command-line help and exit.
+.SH INTERFACE
+TransitMon currently provides two pages.
+.TP
+.BR 1 " or " F1
+Open the dashboard page.
+The dashboard contains only common values that the connected vehicle reports as supported.
+.TP
+.BR 2 " or " F2
+Open the supported-command page.
+This page lists the OBD commands exposed by the current connection.
+.TP
+.BR Up , " Down"
+Scroll the supported-command list when that page is active.
+.TP
+.B R
+Close and reopen the OBD connection, then refresh the supported-command inventory.
+.TP
+.B Q
+Quit TransitMon.
+.SH TERMINAL REQUIREMENTS
+TransitMon requires a terminal of at least 60 columns by 12 rows.
+A larger terminal allows more data to be shown comfortably.
+Because the interface uses curses, a valid
+.B TERM
+environment variable is required.
+.SH DATA DISPLAY
+The v0.1 dashboard can display values such as RPM, vehicle speed, coolant temperature, calculated engine load, throttle position, mass-air flow, fuel trims, control-module voltage, intake-air temperature, and fuel level when the connected vehicle reports those commands as supported.
+.PP
+Speed is normalized to miles per hour and supported temperature values are normalized to degrees Fahrenheit by the shared TransitMon OBD backend.
+A value of
+.B ---
+indicates a null or unavailable response.
+.SH EXAMPLES
+Connect through a USB adapter on
+.IR /dev/ttyUSB0 :
+.PP
+.nf
+transitmon --port /dev/ttyUSB0
+.fi
+.PP
+Allow the backend to auto-detect the serial device:
+.PP
+.nf
+transitmon
+.fi
+.PP
+Run without vehicle hardware:
+.PP
+.nf
+transitmon --mock
+.fi
+.SH SERIAL PERMISSIONS
+On Debian systems, access to USB serial adapters commonly requires membership in the
+.B dialout
+group.
+For example:
+.PP
+.nf
+sudo usermod -aG dialout "$USER"
+.fi
+.PP
+Log out and back in after changing group membership.
+.SH EXIT STATUS
+.TP
+.B 0
+Normal exit.
+.TP
+.B 1
+The OBD adapter could not be opened or connected, or another operating-system-level connection error occurred.
+.TP
+.B 2
+Invalid command-line usage reported by the argument parser.
+.SH NOTES
+The actual set of available sensors is determined by the vehicle and ECU, not by TransitMon.
+Use
+.BR transitprobe (1)
+first when characterizing a new vehicle.
+.SH SEE ALSO
+.BR transitprobe (1)
+.SH AUTHORS
+Rory Hinkel and contributors.
