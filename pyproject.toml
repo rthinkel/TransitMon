@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "transitmon"
+version = "0.1.0"
+description = "Linux-first OBD-II probe and terminal monitor for a vehicle-mounted Raspberry Pi"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Rory Hinkel"}]
+dependencies = [
+  "obd>=0.7.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+transitprobe = "transitprobe.cli:main"
+transitmon = "transitmon.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
