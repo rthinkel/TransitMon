@@ -1,17 +1,59 @@
-name: test
+name: test-and-build
 
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  pytest:
+  test-and-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python -m pip install --upgrade pip
-      - run: pip install -e ".[dev]"
-      - run: pytest -q
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Validate shell launchers
+        run: |
+          bash -n run-transitmon.sh
+          bash -n run-transitprobe.sh
+          bash -n scripts/build_bundle.sh
+
+      - name: Build offline Linux bundle
+        if: github.event_name != 'pull_request'
+        run: ./scripts/build_bundle.sh
+
+      - name: Test bundled probe in mock mode
+        if: github.event_name != 'pull_request'
+        run: |
+          rm -rf /tmp/transitmon-bundle
+          mkdir -p /tmp/transitmon-bundle
+          unzip -q dist/TransitMon-v0.1.0-linux.zip -d /tmp/transitmon-bundle
+          cd /tmp/transitmon-bundle/TransitMon-v0.1.0-linux
+          ./run-transitprobe.sh scan --mock --output /tmp/transitmon-profile.json
+          test -s /tmp/transitmon-profile.json
+
+      - name: Upload downloadable bundle
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: TransitMon-v0.1.0-linux
+          path: |
+            dist/TransitMon-v0.1.0-linux.zip
+            dist/TransitMon-v0.1.0-linux.zip.sha256
+          if-no-files-found: error
+          retention-days: 30

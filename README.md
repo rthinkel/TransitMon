@@ -10,7 +10,34 @@ v0.1 contains three pieces:
 
 The initial target is a 2012 Ford Transit Connect using a wired USB ELM327/STN-compatible adapter such as the OBDLink EX. v0.1 intentionally limits itself to standard OBD-II PIDs; Ford enhanced-module probing can be added after real hardware results are available.
 
-## Install on Debian
+## Downloadable Linux bundle
+
+GitHub Actions builds `TransitMon-v0.1.0-linux.zip` from `main`. The bundle contains the application source, both man pages, offline dependency wheels, and executable launchers:
+
+```bash
+./run-transitprobe.sh
+./run-transitmon.sh
+```
+
+The launchers create a local `.venv` on first use and install dependencies from the included `wheels/` directory, so the downloaded bundle does not need Internet access after extraction.
+
+Typical first use:
+
+```bash
+./run-transitprobe.sh scan --mock
+./run-transitmon.sh --mock
+```
+
+With a USB OBD adapter:
+
+```bash
+./run-transitprobe.sh scan --port /dev/ttyUSB0
+./run-transitmon.sh --port /dev/ttyUSB0
+```
+
+The bundle also contains `QUICKSTART.txt` and a SHA-256 checksum alongside the zip in the build artifact.
+
+## Install from source on Debian
 
 ```bash
 sudo apt update
@@ -69,6 +96,22 @@ transitmon --mock
 
 Mock mode exists so the Pi/T410 software can be installed and exercised before the OBD cable is available.
 
+## Man pages
+
+The source tree and downloadable bundle include:
+
+```text
+man/transitmon.1
+man/transitprobe.1
+```
+
+They can be viewed directly without system installation:
+
+```bash
+man ./man/transitmon.1
+man ./man/transitprobe.1
+```
+
 ## Design principle
 
 TransitMon does not assume a sensor exists merely because OBD-II defines it. `transitprobe` asks the ECU which standard PIDs it supports and saves that inventory. The final dashboard can then be refined using actual results from the specific vehicle.
@@ -84,6 +127,8 @@ Included:
 - curses TUI
 - mock backend
 - graceful handling of unsupported/null responses
+- offline Linux bundle with `.sh` launchers
+- man pages for `transitmon` and `transitprobe`
 
 Deferred until hardware discovery data is available:
 
