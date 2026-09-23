@@ -10,4 +10,4 @@ __all__ = [
     "default_profile_path",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
