@@ -31,29 +31,32 @@ jobs:
         run: |
           bash -n run-transitmon.sh
           bash -n run-transitprobe.sh
+          bash -n scripts/bootstrap_runtime.sh
           bash -n scripts/build_bundle.sh
 
-      - name: Build offline Linux bundle
+      - name: Build self-contained Linux bundle
         if: github.event_name != 'pull_request'
         run: ./scripts/build_bundle.sh
 
-      - name: Test bundled probe in mock mode
+      - name: Test bundled probe without runtime bootstrap
         if: github.event_name != 'pull_request'
         run: |
           rm -rf /tmp/transitmon-bundle
           mkdir -p /tmp/transitmon-bundle
-          unzip -q dist/TransitMon-v0.1.0-linux.zip -d /tmp/transitmon-bundle
-          cd /tmp/transitmon-bundle/TransitMon-v0.1.0-linux
+          unzip -q dist/TransitMon-v0.1.1-linux.zip -d /tmp/transitmon-bundle
+          cd /tmp/transitmon-bundle/TransitMon-v0.1.1-linux
+          rm -rf .venv
           ./run-transitprobe.sh scan --mock --output /tmp/transitmon-profile.json
           test -s /tmp/transitmon-profile.json
+          test ! -e .venv
 
       - name: Upload downloadable bundle
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: TransitMon-v0.1.0-linux
+          name: TransitMon-v0.1.1-linux
           path: |
-            dist/TransitMon-v0.1.0-linux.zip
-            dist/TransitMon-v0.1.0-linux.zip.sha256
+            dist/TransitMon-v0.1.1-linux.zip
+            dist/TransitMon-v0.1.1-linux.zip.sha256
           if-no-files-found: error
           retention-days: 30
