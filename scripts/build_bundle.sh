@@ -12,6 +12,9 @@ rm -rf "$BUNDLE" "$ZIP"
 mkdir -p "$BUNDLE/src" "$BUNDLE/man" "$BUNDLE/wheels"
 
 cp -R "$ROOT/src/." "$BUNDLE/src/"
+find "$BUNDLE/src" -type d \( -name '__pycache__' -o -name '*.egg-info' \) -prune -exec rm -rf {} +
+find "$BUNDLE/src" -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
+
 cp "$ROOT/README.md" "$ROOT/LICENSE" "$BUNDLE/"
 cp "$ROOT/run-transitmon.sh" "$ROOT/run-transitprobe.sh" "$BUNDLE/"
 cp "$ROOT/man/transitmon.1" "$ROOT/man/transitprobe.1" "$BUNDLE/man/"
